@@ -1,0 +1,119 @@
+<html>
+<head>
+<title>Simple Bar Chart with D3.js | NYU Stern CITL</title>
+<meta charset="utf-8" />
+<style>
+
+.bar {
+  fill: steelblue;
+}
+
+.bar:hover {
+  fill: brown;
+}
+
+.axis {
+  font: 10px sans-serif;
+  font-weight: bold;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+</head>
+<body>
+<h2>Simple Bar Chart with D3.js</h2>
+<div id="chart"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script type="text/javascript">
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.ordinal()
+    .rangeBands([0, width], .2);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var svg = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+	.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	
+// add the tooltip for the bar chart
+var tooltip = d3.select("#chart").append("div")
+	.attr("class", "tooltip")
+	.style("opacity", 0);
+	
+// column name from the csv file that we need to plot
+var columnName = "Management, professional, and related occupations";
+
+d3.csv("data.csv", function(error, data) {
+  if (error) throw error;
+
+  x.domain(data.map(function(d) { return d["Time"]; }));
+  y.domain([0, d3.max(data, function(d) { return d[columnName]; })]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+	  .append("text")
+      .attr("x", width)
+      .attr("dy", "2.00em")
+      .style("text-anchor", "end")
+      .text("Time");
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Percentage Utilization");
+
+  svg.selectAll(".bar")
+      .data(data)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return x(d["Time"]); })
+      .attr("width", x.rangeBand())
+      .attr("y", function(d) { return y(d[columnName]); })
+      .attr("height", function(d) { return height - y(d[columnName]); })
+	  .on("mouseover", function(d) {
+				  tooltip.transition()
+					   .duration(200)
+					   .style("opacity", .9);
+				  tooltip.html("<b>Time ::</b> " + d["Time"] + "<br/>"
+							+ "<b>Utilization ::</b> " + d[columnName] + "%")
+					   .style("left", (d3.event.pageX + 5) + "px")
+					   .style("top", (d3.event.pageY - 28) + "px");
+			  })
+	  .on("mouseout", function(d) {
+		  tooltip.transition()
+			   .duration(500)
+			   .style("opacity", 0);
+	  });	  
+});
+
+</script>
+</body>
+</html>
